@@ -1103,6 +1103,39 @@ static PyObject* get_transport_state (PyObject* self, PyObject* args)
     return Py_BuildValue("i", transport_state);
 }
 
+static PyObject* get_transport_position (PyObject* self, PyObject* args)
+{
+    pyjack_client_t * client = self_or_global_client(self);
+    if(client->pjc == NULL) {
+        PyErr_SetString(JackNotConnectedError, "Jack connection has not yet been established.");
+        return NULL;
+    }
+
+    jack_position_t pos;
+    jack_transport_query (client->pjc, &pos);
+
+    PyObject* dict = PyDict_New();
+    PyObject* v;
+    PyDict_SetItemString(dict, "bar", v=PyInt_FromLong(pos.bar));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "beat", v=PyInt_FromLong(pos.beat));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "tick", v=PyInt_FromLong(pos.tick));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "bar_start_tick", v=PyFloat_FromDouble(pos.bar_start_tick));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "beats_per_bar", v=PyFloat_FromDouble(pos.beats_per_bar));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "beat_type", v=PyFloat_FromDouble(pos.beat_type));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "ticks_per_beat", v=PyFloat_FromDouble(pos.ticks_per_beat));
+    Py_DECREF(v);
+    PyDict_SetItemString(dict, "beats_per_minute", v=PyFloat_FromDouble(pos.beats_per_minute));
+    Py_DECREF(v);
+
+    return dict;
+}
+
 #ifdef JACK2
 static PyObject* get_version(PyObject* self, PyObject* args)
 {
@@ -1385,6 +1418,7 @@ static PyMethodDef pyjack_methods[] = {
   {"get_current_transport_frame", get_current_transport_frame,  METH_VARARGS, "get_current_transport_frame():\n  Returns the current transport frame"},
   {"transport_locate",   transport_locate,        METH_VARARGS, "transport_locate(frame):\n  Sets the current transport frame"},
   {"get_transport_state",get_transport_state,     METH_VARARGS, "get_transport_state():\n  Returns the current transport state"},
+  {"get_transport_position",get_transport_position, METH_VARARGS, "get_transport_position():\n  Returns the current transport position"},
   {"transport_stop",     transport_stop,          METH_VARARGS, "transport_stop():\n  Stopping transport"},
   {"transport_start",    transport_start,         METH_VARARGS, "transport_start():\n  Starting transport"},
 #ifdef JACK2
